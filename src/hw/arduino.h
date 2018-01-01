@@ -5,7 +5,7 @@
 #ifndef _HW_ARDUINO_H_
 #define _HW_ARDUINO_H_
 
-#define UART_BAUD_RATE   12  // 76800 @ 8MHz
+#define UART_BAUD_RATE   8  // 115200 @ 16MHz
 #define RINGBUF_SIZE    128
 
 // SPI port defs
