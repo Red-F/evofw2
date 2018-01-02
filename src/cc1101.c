@@ -124,13 +124,61 @@ static void send_bit(void) {
   }
 }
 
-ISR(GDO2_CLK_INTVECT) {
-  uint8_t bit = GDO0_DATA_IN;
+// ISR(GDO2_CLK_INTVECT) {
+//   uint8_t bit = GDO0_DATA_IN;
+//   if (radio_state == RS_RX) {
+//     receive_bit(bit);
+//   } else if (radio_state == RS_TX) {
+//     send_bit();
+//   }
+// }
+
+ISR(GDO2_CLK_INTVECT, ISR_NAKED) {
+  register uint8_t bit asm("r24");
+  asm volatile(
+    "push r1\n\t"
+    "push r0\n\t"
+    "in r0, 0x3f\n\t"
+    "push r0\n\t"
+    "in r0, 0x09\n\t"
+    "eor r1, r1\n\t"
+    "push r18\n\t"
+    "push r19\n\t"
+    "push r20\n\t"
+    "push r21\n\t"
+    "push r22\n\t"
+    "push r23\n\t"
+    "push r24\n\t"
+    "push r25\n\t"
+    "push r26\n\t"
+    "push r27\n\t"
+    "push r30\n\t"
+    "push r31\n\t"
+    "mov r24, r0\n\t");
   if (radio_state == RS_RX) {
     receive_bit(bit);
   } else if (radio_state == RS_TX) {
     send_bit();
   }
+    asm volatile(
+    "pop r31\n\t"
+    "pop r30\n\t"
+    "pop r27\n\t"
+    "pop r26\n\t"
+    "pop r25\n\t"
+    "pop r24\n\t"
+    "pop r23\n\t"
+    "pop r22\n\t"
+    "pop r21\n\t"
+    "pop r20\n\t"
+    "pop r19\n\t"
+    "pop r18\n\t"
+    "pop r0\n\t"
+    "out 0x3f, r0\n\t"
+    "pop r0\n\t"
+    "pop r1\n\t"
+    "reti"
+  );
 }
 
 static void cc_enter_rx_mode(void) {
