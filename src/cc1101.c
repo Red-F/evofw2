@@ -99,8 +99,8 @@ static uint8_t spi_strobe(uint8_t b) {
   return result;
 }
 
-static void receive_bit(void) {
-  uint8_t bit = (GDO0_DATA_IN >> GDO0_DATA_PIN) & 1;
+static void receive_bit(uint8_t bit) {
+  bit = (bit >> GDO0_DATA_PIN) & 1;
   if (accept_bit(bit) != 0) {
     // Non-0 is a request to switch to transmit mode. This is called from interrupt
     // handlers. Actual switch is delayed until main loop.
@@ -125,8 +125,9 @@ static void send_bit(void) {
 }
 
 ISR(GDO2_CLK_INTVECT) {
+  uint8_t bit = GDO0_DATA_IN;
   if (radio_state == RS_RX) {
-    receive_bit();
+    receive_bit(bit);
   } else if (radio_state == RS_TX) {
     send_bit();
   }

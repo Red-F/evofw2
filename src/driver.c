@@ -171,6 +171,14 @@ uint8_t driver_accept_bit(uint8_t bit) {
     return 0;
   }
 
+  if (bit_counter > 0 && bit_counter < 9) {
+    // bits arrive LSB first - rotate in from the left
+    byte_buffer >>= 1;
+    if (bit) byte_buffer |= 0x80;
+    bit_counter++;
+    return 0;
+  }
+
   if (bit_counter == 0) {  // start bit
     if (bit) {
       // start bit shouldn't be high
@@ -181,8 +189,7 @@ uint8_t driver_accept_bit(uint8_t bit) {
     bit_counter++;
     return 0;
   }
-
-  if (bit_counter == 9) {  // stop bit
+  else {  // stop bit
     if (!bit) {
       // stop bit shouldn't be low
       rb_put(&rx_buffer, RX_FRAME_ERROR_STOP);
@@ -203,12 +210,6 @@ uint8_t driver_accept_bit(uint8_t bit) {
     byte_buffer = 0;
     return 0;
   }
-
-  // bits arrive LSB first - rotate in from the left
-  byte_buffer >>= 1;
-  if (bit) byte_buffer |= 0x80;
-  bit_counter++;
-  return 0;
 }
 
 uint8_t driver_request_bit(void) {
