@@ -40,10 +40,12 @@ inline void set_write(uint8_t *flags)       { *flags |= 0x40; }
 
 static write_str_fn write_str;
 static send_byte_fn send_byte;
+static freq_adjust_fn frequency_adjust;
 
-void transcoder_init(write_str_fn w, send_byte_fn s) {
+void transcoder_init(write_str_fn w, send_byte_fn s, freq_adjust_fn f) {
   write_str = w;
   send_byte = s;
+  frequency_adjust = f;
 }
 
 void transcoder_accept_inbound_byte(uint8_t b, uint8_t status) {
@@ -83,6 +85,7 @@ void transcoder_accept_inbound_byte(uint8_t b, uint8_t status) {
     }
     write_str("\r\n");
     state = S_HEADER;
+    frequency_adjust();
     return;
   }
 

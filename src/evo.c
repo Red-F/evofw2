@@ -14,10 +14,10 @@ void main_init(void) {
   led_init();
 
   // Wire up components
-  transcoder_init(&tty_write_str, &driver_send_byte);
+  transcoder_init(&tty_write_str, &driver_send_byte, &cc_adjust_frequency);
   driver_init(&transcoder_accept_inbound_byte);
   tty_init(&transcoder_accept_outbound_byte);
-  cc_init(&driver_accept_bit, &driver_request_bit);
+  cc_init(&driver_accept_bit, &driver_request_bit, &tty_write_str);
 
   led_off();
   sei();

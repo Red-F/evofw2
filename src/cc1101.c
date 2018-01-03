@@ -1,6 +1,7 @@
 #include <util/delay.h>
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
+#include <stdio.h>
 #include "cc1101.h"
 #include "config.h"
 
@@ -10,6 +11,10 @@
 #define CC1100_SRX     0x34
 #define CC1100_STX     0x35
 #define CC1100_SIDLE   0x36
+
+// Configuration registers
+#define CC1100_FREQEST 0xF2
+#define CC1100_FSCTRL0 0x0C
 
 // Bit fields in the chip status byte
 #define CC1100_STATUS_STATE_BM   0x70
@@ -63,6 +68,8 @@ static const uint8_t PROGMEM CC_REGISTER_VALUES[] = {
 
 static accept_bit_fn accept_bit;
 static request_bit_fn request_bit;
+static write_str_fn write_str;
+
 
 static volatile uint8_t radio_state;
 
@@ -174,9 +181,23 @@ static uint8_t cc_write(uint8_t addr, uint8_t b) {
   return result;
 }
 
-void cc_init(accept_bit_fn a, request_bit_fn r) {
+static uint8_t cc_read(uint8_t addr) {
+  uint8_t result;
+
+  spi_assert();
+  while (SPI_PORT & (1 << SPI_MISO));
+
+  spi_send(addr | 0x80);
+  result = spi_send(0);
+
+  spi_deassert();
+  return result;
+}
+
+void cc_init(accept_bit_fn a, request_bit_fn r, write_str_fn w) {
   accept_bit = a;
   request_bit = r;
+  write_str = w;
 
   spi_init();
 
@@ -207,4 +228,13 @@ void cc_work(void) {
   } else if (radio_state == RS_CHANGE_TO_TX) {
     cc_enter_tx_mode();
   }
+}
+
+// static char str[12];
+
+void cc_adjust_frequency(void) {
+  int8_t estimatedFrequencyOffset = cc_read(CC1100_FREQEST);
+  cc_write(CC1100_FSCTRL0, estimatedFrequencyOffset);
+  // sprintf(str, "%hd\r\n", estimatedFrequencyOffset);
+  // write_str(str);
 }
